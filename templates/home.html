@@ -1,0 +1,49 @@
+<!doctype html>
+<html>
+  <head>
+    <title>File Upload</title>
+  </head>
+  <body>
+    <script language="javascript" type="text/javascript">
+      window.onload = function () {
+          var fileUpload = document.getElementById("fileupload");
+          fileUpload.onchange = function () {
+              if (typeof (FileReader) != "undefined") {
+                  var dvPreview = document.getElementById("dvPreview");
+                  dvPreview.innerHTML = "";
+                  var regex = /^([a-zA-Z0-9\s_\\.\-:])+(.jpg|.jpeg|.gif|.png|.bmp)$/;
+                  for (var i = 0; i < fileUpload.files.length; i++) {
+                      var file = fileUpload.files[i];
+                      if (regex.test(file.name.toLowerCase())) {
+                          var reader = new FileReader();
+                          reader.onload = function (e) {
+                              var img = document.createElement("IMG");
+                              img.height = "100";
+                              img.width = "100";
+                              img.src = e.target.result;
+                              dvPreview.appendChild(img);
+                          }
+                          reader.readAsDataURL(file);
+                      } else {
+                          alert(file.name + " is not a valid image file.");
+                          dvPreview.innerHTML = "";
+                          return false;
+                      }
+                  }
+              } else {
+                  alert("This browser does not support HTML5 FileReader.");
+              }
+          }
+      };
+    </script>
+
+    <h1>File Upload</h1>
+    <form method="POST" action="" enctype="multipart/form-data">
+      <p><input id="fileupload" type="file" name="file" accept="image/*" multiple></p>
+      <br />
+      <div id="dvPreview"></div>
+      <br />
+      <p><input type="submit" value="Submit"></p>
+    </form>
+  </body>
+</html>
