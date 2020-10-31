@@ -1,12 +1,13 @@
 import json
-
-from flask import Flask, render_template, request, redirect, url_for, session
 import os
+import boto3
+from botocore.config import Config
+from flask import Flask, render_template, request, redirect, url_for, session
+
 import numpy as np
 from keras.preprocessing import image
 from keras.models import load_model
 from classes.prediction import Prediction, get_predictions_json
-
 
 app = Flask(__name__)
 app.secret_key = b'c\x83\xc5MU\x9eV\xd2R\x12\x87(\x8c\xb6S\xf3H\xbc\xedn\xa3\xa3\tl'
@@ -49,3 +50,29 @@ def upload_file():
     predictions_str = json.dumps(predictions_json)
     session['predictions'] = predictions_str
     return redirect(url_for('predict', data=predictions_str))
+
+
+@app.route('/sign_s3/')
+def sign_s3():
+    S3_BUCKET = "horses-or-humans"# os.environ.get('S3_BUCKET')
+
+    file_name = request.args.get('file_name')
+    file_type = request.args.get('file_type')
+
+    s3 = boto3.client('s3')
+
+    presigned_post = s3.generate_presigned_post(
+        Bucket=S3_BUCKET,
+        Key=file_name,
+        Fields={"acl": "public-read", "Content-Type": file_type},
+        Conditions=[
+            {"acl": "public-read"},
+            {"Content-Type": file_type}
+        ],
+        ExpiresIn=3600
+    )
+
+    return json.dumps({
+        'data': presigned_post,
+        'url': 'https://%s.s3.amazonaws.com/%s' % (S3_BUCKET, file_name)
+    })
