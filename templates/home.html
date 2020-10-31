@@ -17,12 +17,14 @@
         postData.append('file', file);
 
         xhr.onreadystatechange = function() {
+        console.log(JSON.stringify(xhr, undefined, 4));
           if(xhr.readyState === 4){
             if(xhr.status === 200 || xhr.status === 204){
               console.log("ok");
             }
             else{
               alert("Could not upload file.");
+              console.log("status: " + xhr.status);
             }
          }
         };

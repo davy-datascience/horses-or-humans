@@ -11,7 +11,8 @@ from classes.prediction import Prediction, get_predictions_json
 
 app = Flask(__name__)
 app.secret_key = b'c\x83\xc5MU\x9eV\xd2R\x12\x87(\x8c\xb6S\xf3H\xbc\xedn\xa3\xa3\tl'
-app.config['UPLOAD_FOLDER'] = 'static/uploads'
+# app.config['UPLOAD_FOLDER'] = 'static/uploads'
+app.debug = True
 
 
 @app.route('/')
@@ -54,7 +55,7 @@ def upload_file():
 
 @app.route('/sign_s3/')
 def sign_s3():
-    S3_BUCKET = "horses-or-humans"# os.environ.get('S3_BUCKET')
+    S3_BUCKET = "horses-or-humans" # os.environ.get('S3_BUCKET')
 
     file_name = request.args.get('file_name')
     file_type = request.args.get('file_type')
