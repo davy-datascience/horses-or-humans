@@ -10,7 +10,7 @@
     </script>
     <h1>{{title}}</h1>
     {% for pred in predictions %}
-        <img src="static/uploads/{{ pred.img }}" width="150" />
+        <img src="https://horses-or-humans.s3.eu-west-3.amazonaws.com/{{ pred.img }}" width="150" />
         is a {{pred.prediction}}
         <br/>
     {% endfor %}

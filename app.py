@@ -1,5 +1,12 @@
+import io
 import json
 import os
+import urllib
+from urllib.request import urlopen, Request
+from io import BytesIO
+from PIL import Image
+import requests
+
 import boto3
 from botocore.config import Config
 from botocore.exceptions import ClientError
@@ -28,15 +35,15 @@ def predict():
     return render_template('predict.html', predictions=predictions, title="Predictions")
 
 
-def upload_file(file_name, bucket):
-    """
-    Function to upload a file to an S3 bucket
-    """
-    object_name = file_name
-    s3_client = boto3.client('s3')
-    response = s3_client.upload_file(file_name, bucket, object_name)
+def upload_file(url):
+    headers = {'User-Agent': 'Mozilla/5.0'}
+    req = Request(url=url, headers=headers)
+    fd = urllib.request.urlopen(req)
+    image_file = io.BytesIO(fd.read())
+    im = Image.open(image_file)
+    im = im.resize((300, 300), Image.ANTIALIAS)
 
-    return response
+    return im
 
 
 @app.route('/', methods=['POST'])
@@ -45,10 +52,13 @@ def upload():
     model = load_model('model.h5')
     predictions = []
     for f in request.files.getlist('file'):
-        f.save(os.path.join('static/uploads', f.filename))
-        upload_file(f"static/uploads/{f.filename}", "horses-or-humans")
+        #f.save(os.path.join('static/uploads', f.filename))
+        # loadImage(f"static/uploads/{f.filename}", "horses-or-humans")
+        s3 = boto3.client('s3')
+        s3.put_object(Bucket="horses-or-humans", Key=f.filename, Body=f, ACL='public-read', ContentType='image/jpeg')
 
-        img = image.load_img(f"static/uploads/{f.filename}", target_size=(300, 300))
+        # img = image.load_img(f"static/uploads/{f.filename}", target_size=(300, 300))
+        img = upload_file("https://horses-or-humans.s3.eu-west-3.amazonaws.com/" + f.filename)
         x = image.img_to_array(img)
         x = np.expand_dims(x, axis=0)
 
