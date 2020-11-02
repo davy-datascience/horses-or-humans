@@ -52,12 +52,10 @@ def upload():
     model = load_model('model.h5')
     predictions = []
     for f in request.files.getlist('file'):
-        #f.save(os.path.join('static/uploads', f.filename))
-        # loadImage(f"static/uploads/{f.filename}", "horses-or-humans")
+        # Save image to s3
         s3 = boto3.client('s3')
         s3.put_object(Bucket="horses-or-humans", Key=f.filename, Body=f, ACL='public-read', ContentType='image/jpeg')
 
-        # img = image.load_img(f"static/uploads/{f.filename}", target_size=(300, 300))
         img = upload_file("https://horses-or-humans.s3.eu-west-3.amazonaws.com/" + f.filename)
         x = image.img_to_array(img)
         x = np.expand_dims(x, axis=0)
@@ -75,30 +73,4 @@ def upload():
     predictions_json = get_predictions_json(predictions)
     predictions_str = json.dumps(predictions_json)
     session['predictions'] = predictions_str
-    return redirect(url_for('predict', data=predictions_str))
-
-
-@app.route('/sign_s3/')
-def sign_s3():
-    S3_BUCKET = "horses-or-humans" # os.environ.get('S3_BUCKET')
-
-    file_name = request.args.get('file_name')
-    file_type = request.args.get('file_type')
-
-    s3 = boto3.client('s3')
-
-    presigned_post = s3.generate_presigned_post(
-        Bucket=S3_BUCKET,
-        Key=file_name,
-        Fields={"acl": "public-read", "Content-Type": file_type},
-        Conditions=[
-            {"acl": "public-read"},
-            {"Content-Type": file_type}
-        ],
-        ExpiresIn=3600
-    )
-
-    return json.dumps({
-        'data': presigned_post,
-        'url': 'https://%s.s3.amazonaws.com/%s' % (S3_BUCKET, file_name)
-    })
+    return redirect(url_for('predict'))
